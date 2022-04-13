@@ -1,7 +1,7 @@
 
 import random, serial
 import asyncio
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -21,8 +21,8 @@ async def startup():
     print("Starting...")
 
 @app.get("/", response_class=HTMLResponse)
-async def root():
-    return templates.TemplateResponse("home.html")
+async def root(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 
 @app.websocket_route("/ws")
 async def websocket(websocket: WebSocket):
