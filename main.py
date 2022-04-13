@@ -1,6 +1,6 @@
 
-import serial, random
-
+import random, serial
+import asyncio
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 
@@ -40,25 +40,39 @@ html = """
 </html>
 """
 
+from Config import Config
+conf = Config()
+
+ser= serial.Serial(conf.PORT, conf.BAUD_RATE)
+
+# TODO: set serial to notify arduino of on/off and to set different effects/ colours
+
+
+
 @app.websocket_route("/ws")
 async def websocket(websocket: WebSocket):
     await websocket.accept()
     while True:
-        await websocket.send_text(f"Message text was: {random.randint(0, 100)}")
-        
+        rx = websocket.receive_text()
+        d = ser.readline()
+        if d != '':
+        #something
+            websocket.send_text(d)
+            if rx == "Turn on":
+                ser.write(bytes('1', "utf-8"))
+                send_byte = 0
+            elif rx == "Turn off":
+                ser.write(bytes('0', "utf-8"))
+                send_byte = 1
+
 @app.get("/")
 async def root():
     return HTMLResponse(html)
 
-def test_read_main():
-    client = TestClient(app)
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"msg": "Hello World"}
-
-
-def test_websocket():
-    client = TestClient(app)
-    with client.websocket_connect("/ws") as websocket:
-        data = websocket.receive_json()
-        assert data == {"msg": "Hello WebSocket"}
+def parse_serial_input() -> str:
+        """
+        Return a string representation of binary data
+        """
+        bin_input = str(ser.readline().rstrip()).replace('b', '').replace("'", "")
+        str_output = int(bin_input) if not ValueError else ''
+        return str_output
