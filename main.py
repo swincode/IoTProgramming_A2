@@ -1,64 +1,50 @@
 
-import serial, random
-
-from fastapi import FastAPI, WebSocket
+import random, serial
+import asyncio
+from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = new WebSocket("ws://localhost:8000/ws");
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
+templates = Jinja2Templates(directory="templates")
+
+from Config import Config
+conf = Config()
+
+ser= serial.Serial(conf.PORT, conf.BAUD_RATE, timeout=conf.TIMEOUT)
+
+# TODO: set serial to notify arduino of on/off and to set different effects/ colours
+
+@app.on_event("startup")
+async def startup():
+    print("Starting...")
+
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 
 @app.websocket_route("/ws")
 async def websocket(websocket: WebSocket):
     await websocket.accept()
     while True:
-        await websocket.send_text(f"Message text was: {random.randint(0, 100)}")
+        rx = await websocket.receive_text()
         
-@app.get("/")
-async def root():
-    return HTMLResponse(html)
+        d = ser.readline()
+        await websocket.send_text(f"message: {d}")
 
-def test_read_main():
-    client = TestClient(app)
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == {"msg": "Hello World"}
+        match rx:
+            case "power":
+                ser.write(bytes('1', "utf-8"))
+            case "purple":
+                ser.write(bytes('3', "utf-8"))
+            case "blue":
+                ser.write(bytes('4', "utf-8"))
 
-
-def test_websocket():
-    client = TestClient(app)
-    with client.websocket_connect("/ws") as websocket:
-        data = websocket.receive_json()
-        assert data == {"msg": "Hello WebSocket"}
+def parse_serial_input() -> str:
+        """
+        Return a string representation of binary data
+        """
+        bin_input = str(ser.readline().rstrip()).replace('b', '').replace("'", "")
+        str_output = int(bin_input) if not ValueError else ''
+        return str_output
