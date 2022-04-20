@@ -17,26 +17,26 @@
                     <div class="row">
                         <div class="col">
                             <!-- button -->
-                            <form action="" onsubmit="sendMessage(event)">
+                            <form action="" onsubmit="sendMessage(event, 'power')">
                                 <button class="btn btn-primary">Toggle power</button>
                             </form>
                         </div>
                         <div class="col">
                             <!-- colours -->
                             <div class="col">
-                                <form action="" onsubmit="sendMessage(event)">
+                                <form action="" onsubmit="sendMessage(event, 'purple')">
                                     <button class="btn btn-primary">Purple</button>
                                 </form>
                                 <br>
-                                <form action="" onsubmit="sendMessage(event)">
+                                <form action="" onsubmit="sendMessage(event, 'red')">
                                     <button class="btn btn-primary">Red</button>
                                 </form>
                                 <br>
-                                <form action="" onsubmit="sendMessage(event)">
+                                <form action="" onsubmit="sendMessage(event, 'blue')">
                                     <button class="btn btn-primary">Blue</button>
                                 </form>
                                 <br>
-                                <form action="" onsubmit="sendMessage(event)">
+                                <form action="" onsubmit="sendMessage(event, 'green')">
                                     <button class="btn btn-primary">Green</button>
                                 </form>
                             </div>
@@ -56,10 +56,8 @@
                 message.appendChild(content)
                 messages.appendChild(message)
             };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
+            function sendMessage(event, msg) {
+                ws.send(msg)
                 event.preventDefault()
             }
         </script>
