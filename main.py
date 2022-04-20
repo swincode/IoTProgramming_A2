@@ -24,22 +24,13 @@ async def startup():
 async def root(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
 
-@app.websocket_route("/ws")
+@app.websocket_route("/ws/buttons")
 async def websocket(websocket: WebSocket):
     await websocket.accept()
     while True:
         rx = await websocket.receive_text()
-        
-        d = ser.readline()
-        await websocket.send_text(f"message: {d}")
-
-        match rx:
-            case "power":
-                ser.write(bytes('1', "utf-8"))
-            case "purple":
-                ser.write(bytes('3', "utf-8"))
-            case "blue":
-                ser.write(bytes('4', "utf-8"))
+        ser.write(bytes(rx, "utf-8"))
+            
 
 def parse_serial_input() -> str:
         """
