@@ -30,7 +30,12 @@ async def websocket(websocket: WebSocket):
     while True:
         rx = await websocket.receive_text()
         ser.write(bytes(rx, "utf-8"))
-            
+
+@app.websocket_route("/ws/graph")
+async def graph_websocket(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        print("graph")     
 
 def parse_serial_input() -> str:
         """
